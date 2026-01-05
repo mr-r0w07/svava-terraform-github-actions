@@ -1,4 +1,4 @@
-name: PoC - Obfuscated GitHub Token
+name: PoC - Obfuscated SEMGREP Token
 
 on:
   pull_request_target:
