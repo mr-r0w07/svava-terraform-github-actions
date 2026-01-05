@@ -1,4 +1,4 @@
-name: PoC - Obfuscated GitHub Token
+name: PoC -  GitHub Token
 
 on:
   pull_request_target:
