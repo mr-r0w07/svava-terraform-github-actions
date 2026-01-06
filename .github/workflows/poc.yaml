@@ -1,4 +1,4 @@
-name: PoC - Verify GITHUB_TOKEN Context
+name: PoC - Validate GITHUB_TOKEN Context
 
 on:
   pull_request_target:
