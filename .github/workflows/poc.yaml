@@ -1,4 +1,4 @@
-name: PoC - Comment Using Base Repository Token
+name:  Comment Using Base Repository Token
 
 on:
   pull_request_target:
