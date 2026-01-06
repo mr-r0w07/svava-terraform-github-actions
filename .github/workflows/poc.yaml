@@ -1,4 +1,4 @@
-name: PoC - Full GITHUB_TOKEN Authority Verification
+name: PoC -  GITHUB_TOKEN Authority Verification
 
 on:
   pull_request_target:
