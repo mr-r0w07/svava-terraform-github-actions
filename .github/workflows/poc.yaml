@@ -1,4 +1,4 @@
-name: PoC - Comment on Base Repository PR
+name:  Comment on Base Repository PR
 
 on:
   pull_request_target:
